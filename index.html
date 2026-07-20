@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>期货知识测评</title>
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "PingFang SC", "Source Han Sans CN", "Microsoft YaHei", system-ui, sans-serif;
+  background: linear-gradient(135deg, #0a1628 0%, #0f2440 40%, #152238 100%);
+  min-height: 100vh;
+  color: #1a1a2e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.container {
+  width: 100%;
+  max-width: 720px;
+}
+/* ===== Fade Animation ===== */
+.screen {
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+/* ===== Card ===== */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 36px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+/* ===== Start Screen ===== */
+.start-icon { text-align: center; font-size: 56px; margin-bottom: 8px; }
+.start-title { text-align: center; font-size: 28px; font-weight: 700; color: #0a1628; margin-bottom: 6px; }
+.start-subtitle { text-align: center; font-size: 14px; color: #777; margin-bottom: 28px; line-height: 1.7; }
+.start-features { display: flex; justify-content: center; gap: 28px; margin-bottom: 24px; flex-wrap: wrap; }
+.start-feature { text-align: center; font-size: 13px; color: #555; }
+.start-feature .sf-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+.nickname-row { display: flex; gap: 10px; margin-bottom: 8px; }
+.nickname-row input {
+  flex: 1; padding: 14px 18px; border: 2px solid #e0e0e0; border-radius: 10px;
+  font-size: 15px; outline: none; transition: border 0.2s;
+}
+.nickname-row input:focus { border-color: #c9a96e; }
+.btn {
+  padding: 14px 32px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
+  cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary {
+  width: 100%; background: linear-gradient(135deg, #c9a96e, #b8943a);
+  color: #fff; font-size: 17px; letter-spacing: 1px;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,169,110,0.4); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-retry {
+  background: #0a1628; color: #c9a96e; border: 2px solid #c9a96e; width: 100%; margin-top: 12px;
+}
+.btn-retry:hover { background: #c9a96e; color: #fff; }
+/* ===== Quiz Screen ===== */
+.quiz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.quiz-counter { font-size: 14px; color: #888; font-weight: 600; }
+.progress-bar-wrap { height: 6px; background: #e8e8e8; border-radius: 3px; margin-bottom: 28px; overflow: hidden; }
+.progress-bar {
+  height: 100%; background: linear-gradient(90deg, #c9a96e, #e8c97a);
+  border-radius: 3px; transition: width 0.35s ease; width: 0%;
+}
+.difficulty-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 12px;
+}
+.diff-easy { background: #e8f5e9; color: #2e7d32; }
+.diff-medium { background: #fff3e0; color: #e65100; }
+.diff-hard { background: #fce4ec; color: #c62828; }
+.question-text { font-size: 19px; font-weight: 700; color: #0a1628; line-height: 1.6; margin-bottom: 24px; }
+.options-list { display: flex; flex-direction: column; gap: 10px; }
+.option-card {
+  display: flex; align-items: center; gap: 12px; padding: 16px 20px;
+  border: 2px solid #e8e8e8; border-radius: 12px; cursor: pointer;
+  transition: all 0.2s; background: #fafafa; font-size: 15px;
+}
+.option-card:hover { border-color: #c9a96e; background: #fdfaf3; transform: translateX(3px); }
+.option-card.selected { border-color: #0a1628; background: #f0f4ff; }
+.option-card.correct { border-color: #4caf50 !important; background: #e8f5e9 !important; }
+.option-card.wrong { border-color: #f44336 !important; background: #ffebee !important; }
+.option-label {
+  width: 32px; height: 32px; border-radius: 50%; background: #e8e8e8;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; color: #555; flex-shrink: 0; transition: all 0.2s;
+}
+.option-card.selected .option-label { background: #0a1628; color: #fff; }
+.option-card.correct .option-label { background: #4caf50; color: #fff; }
+.option-card.wrong .option-label { background: #f44336; color: #fff; }
+/* ===== Result Screen ===== */
+.result-header { text-align: center; margin-bottom: 24px; }
+.result-grade-icon { font-size: 64px; }
+.result-grade-name { font-size: 26px; font-weight: 700; margin: 8px 0 4px; }
+.result-grade-comment { font-size: 14px; color: #777; margin-bottom: 8px; }
+.result-suggestion { font-size: 13px; color: #c9a96e; background: #fdfaf3; padding: 12px 16px; border-radius: 8px; text-align: center; }
+.ring-chart-wrap { display: flex; justify-content: center; align-items: center; margin: 20px 0; }
+.ring-chart { position: relative; width: 160px; height: 160px; }
+.ring-chart svg { transform: rotate(-90deg); width: 160px; height: 160px; }
+.ring-bg { fill: none; stroke: #e8e8e8; stroke-width: 12; }
+.ring-fg { fill: none; stroke: #c9a96e; stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 1.5s ease; }
+.ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-score { font-size: 42px; font-weight: 800; color: #0a1628; }
+.ring-label { font-size: 12px; color: #999; }
+.result-stats { display: flex; justify-content: center; gap: 32px; margin: 20px 0; }
+.result-stat { text-align: center; }
+.result-stat-num { font-size: 22px; font-weight: 700; color: #0a1628; }
+.result-stat-label { font-size: 12px; color: #999; }
+/* ===== Wrong Answer Review ===== */
+.review-section { margin-top: 8px; }
+.review-title { font-size: 15px; font-weight: 700; color: #555; margin-bottom: 12px; text-align: center; }
+.review-item {
+  padding: 14px 16px; border-left: 4px solid #f44336; background: #fafafa;
+  margin-bottom: 10px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.7;
+}
+.review-item .ri-q { font-weight: 600; color: #0a1628; }
+.review-item .ri-a { color: #4caf50; }
+/* ===== Footer ===== */
+.footer { text-align: center; padding: 20px; font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.7; }
+/* ===== Confetti Canvas ===== */
+#confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .card { padding: 28px 18px; border-radius: 12px; }
+  .start-title { font-size: 22px; }
+  .start-features { gap: 16px; }
+  .question-text { font-size: 16px; }
+  .option-card { padding: 14px 14px; font-size: 14px; }
+  .ring-chart { width: 130px; height: 130px; }
+  .ring-score { font-size: 32px; }
+  .result-stats { gap: 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ==================== START SCREEN ==================== -->
+  <div id="screen-start" class="screen active">
+    <div class="card">
+      <div class="start-icon">📊</div>
+      <h1 class="start-title">期货知识测评</h1>
+      <p class="start-subtitle">
+        25 道精选题，覆盖期货基础概念、交易机制与合约规则<br>
+        测测你对期货市场的了解程度！
+      </p>
+      <div class="start-features">
+        <div class="start-feature"><span class="sf-icon">📝</span> 判断+选择</div>
+        <div class="start-feature"><span class="sf-icon">⏱️</span> 约5分钟</div>
+        <div class="start-feature"><span class="sf-icon">🏆</span> 等级评定</div>
+      </div>
+      <div class="nickname-row">
+        <input id="nickname" type="text" placeholder="请输入你的昵称（选填）" maxlength="16">
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()">🚀 开始测评</button>
+    </div>
+  </div>
+
+  <!-- ==================== QUIZ SCREEN ==================== -->
+  <div id="screen-quiz" class="screen">
+    <div class="card">
+      <div class="quiz-header">
+        <span class="quiz-counter" id="quiz-counter">1 / 25</span>
+        <span id="difficulty-badge"></span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="question-text" id="question-text"></div>
+      <div class="options-list" id="options-list"></div>
+    </div>
+  </div>
+
+  <!-- ==================== RESULT SCREEN ==================== -->
+  <div id="screen-result" class="screen">
+    <div class="card">
+      <div class="result-header">
+        <div class="result-grade-icon" id="grade-icon"></div>
+        <div class="result-grade-name" id="grade-name"></div>
+        <div class="result-grade-comment" id="grade-comment"></div>
+        <div class="result-suggestion" id="grade-suggestion"></div>
+      </div>
+      <div class="ring-chart-wrap">
+        <div class="ring-chart">
+          <svg viewBox="0 0 160 160">
+            <circle class="ring-bg" cx="80" cy="80" r="68"/>
+            <circle class="ring-fg" id="ring-fg" cx="80" cy="80" r="68"
+              stroke-dasharray="427.26" stroke-dashoffset="427.26"/>
+          </svg>
+          <div class="ring-text">
+            <span class="ring-score" id="ring-score">0</span>
+            <span class="ring-label">正确率</span>
+          </div>
+        </div>
+      </div>
+      <div class="result-stats">
+        <div class="result-stat">
+          <div class="result-stat-num" id="stat-correct">0</div>
+          <div class="result-stat-label">✅ 答对</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-num" id="stat-wrong">0</div>
+          <div class="result-stat-label">❌ 答错</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-num" id="stat-score">0</div>
+          <div class="result-stat-label">📊 得分</div>
+        </div>
+      </div>
+      <div class="review-section" id="review-section" style="display:none;">
+        <div class="review-title">📋 答错题目回顾</div>
+        <div id="review-list"></div>
+      </div>
+      <button class="btn btn-retry" onclick="retryQuiz()">🔄 再来一次</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  本测评为知识学习工具，不构成任何投资建议。期市有风险，入市需谨慎。
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+// ==============================
+// 题库：25 题（判断 10 + 选择 15）
+// ==============================
+const QUESTIONS = [
+  // ========== 判断题 (1-10) ==========
+  { id:1,  type:"tf", difficulty:"easy", topic:"基础概念", question:"期货合约是一种标准化的远期合约，在交易所内集中交易。", options:["正确","错误","期货合约是非标准化的","期货合约只在场外交易"], answer:0 },
+  { id:2,  type:"tf", difficulty:"easy", topic:"基础概念", question:"期货交易者买入合约后，必须持有至到期进行实物交割才能平仓。", options:["正确","错误","只有机构可以提前平仓","交割日前可以转让但需缴纳罚金"], answer:1 },
+  { id:3,  type:"tf", difficulty:"easy", topic:"交易机制", question:"保证金制度允许交易者仅支付合约价值的一部分即可参与期货交易，从而产生杠杆效应。", options:["正确","错误","保证金必须是合约全值","杠杆仅适用于商品期货"], answer:0 },
+  { id:4,  type:"tf", difficulty:"easy", topic:"基础概念", question:"期货市场中，预期价格上涨并买入合约的投资者被称为「空头」。", options:["正确","错误","空头是指持有现金的投资者","多空头称谓因交易所而异"], answer:1 },
+  { id:5,  type:"tf", difficulty:"easy", topic:"交易机制", question:"涨跌停板制度是期货市场为了防止价格在单个交易日内过度波动而设置的价格限制。", options:["正确","错误","涨跌停板只适用于股票市场","涨跌停板是交易所的收费项目"], answer:0 },
+  { id:6,  type:"tf", difficulty:"medium", topic:"合约规则", question:"期货合约在最后交易日之后，投资者仍然可以继续交易该合约。", options:["正确","错误","最后交易日后只能由机构交易","最后交易日后可以场外交易"], answer:1 },
+  { id:7,  type:"tf", difficulty:"medium", topic:"交易机制", question:"套期保值的目的是通过期货交易获取投机利润。", options:["正确","错误","套期保值是短线交易策略","套期保值仅适用于农产品"], answer:1 },
+  { id:8,  type:"tf", difficulty:"medium", topic:"交易机制", question:"每日无负债结算制度（逐日盯市）是指每个交易日结束后，根据当日结算价对持仓盈亏进行清算。", options:["正确","错误","每日无负债结算每周进行一次","该制度仅在亏损时适用"], answer:0 },
+  { id:9,  type:"tf", difficulty:"medium", topic:"基础概念", question:"期货交易的杠杆效应只会放大收益，不会放大亏损。", options:["正确","错误","杠杆效应仅放大亏损","杠杆倍数由投资者自行决定"], answer:1 },
+  { id:10, type:"tf", difficulty:"easy", topic:"合约规则", question:"中国的期货市场由中国证监会进行统一监管。", options:["正确","错误","期货市场由银保监会监管","期货市场没有统一监管机构"], answer:0 },
+
+  // ========== 单选题 (11-25) ==========
+  { id:11, type:"choice", difficulty:"easy", topic:"基础概念", question:"期货交易中，新买入或新卖出期货合约的行为被称为什么？", options:["平仓","开仓","交割","对冲"], answer:1 },
+  { id:12, type:"choice", difficulty:"easy", topic:"交易机制", question:"以下哪种情况会导致期货公司对客户进行「强行平仓」？", options:["客户要求加仓","保证金不足且未在规定时间内补足","市场价格上涨超过3%","客户连续盈利"], answer:1 },
+  { id:13, type:"choice", difficulty:"medium", topic:"合约规则", question:"期货合约的标准化内容通常不包括以下哪一项？", options:["交易单位","最小变动价位","交易价格","最后交易日"], answer:2 },
+  { id:14, type:"choice", difficulty:"easy", topic:"合约规则", question:"以下哪一个是中国主要的商品期货交易所？", options:["深圳证券交易所","上海期货交易所","北京金融资产交易所","香港联合交易所"], answer:1 },
+  { id:15, type:"choice", difficulty:"hard", topic:"基础概念", question:"现代期货交易的雏形最早出现在哪个国家？", options:["英国","美国","日本","荷兰"], answer:2 },
+  { id:16, type:"choice", difficulty:"medium", topic:"交易机制", question:"套期保值（Hedging）的主要目的是什么？", options:["获取最大投机利润","规避现货价格波动风险","增加交易频率以获取返佣","满足监管合规要求"], answer:1 },
+  { id:17, type:"choice", difficulty:"medium", topic:"合约规则", question:"持仓限额制度的主要目的是什么？", options:["提高交易手续费收入","防止市场操纵和过度投机","限制小投资者的参与","保证交易所的流动性"], answer:1 },
+  { id:18, type:"choice", difficulty:"medium", topic:"基础概念", question:"以下哪项不属于期货交易的特点？", options:["保证金交易","双向交易（可做多也可做空）","T+0交易制度","无限风险敞口且无任何对冲机制"], answer:3 },
+  { id:19, type:"choice", difficulty:"medium", topic:"合约规则", question:"商品期货合约到期后，交割方式通常是什么？", options:["只能是实物交割","只能是现金交割","实物交割或现金交割均可，视合约规定","交割方式由买方单方面决定"], answer:2 },
+  { id:20, type:"choice", difficulty:"medium", topic:"基础概念", question:"基差（Basis）是指什么？", options:["期货价格与结算价之差","现货价格与期货价格之差","买入价与卖出价之差","开盘价与收盘价之差"], answer:1 },
+  { id:21, type:"choice", difficulty:"easy", topic:"合约规则", question:"期货合约中的「一手」代表什么？", options:["任意数量的合约","合约规定的最小交易单位","相当于100股","一个交易日的成交量"], answer:1 },
+  { id:22, type:"choice", difficulty:"hard", topic:"基础概念", question:"以下哪种产品不属于金融期货的范畴？", options:["股指期货","国债期货","大豆期货","外汇期货"], answer:2 },
+  { id:23, type:"choice", difficulty:"hard", topic:"基础概念", question:"以下关于期权的描述，哪项准确区分了期权与期货？", options:["期权和期货没有任何区别","期权买方只有义务没有权利","期权买方有权利但没有义务履行合约","期货买方有权利但没有义务履行合约"], answer:2 },
+  { id:24, type:"choice", difficulty:"medium", topic:"交易机制", question:"「对冲平仓」是指什么操作？", options:["同时开多仓和开空仓","进行与原有持仓方向相反的交易以了结头寸","将持仓转为下月合约","等待合约到期自动结算"], answer:1 },
+  { id:25, type:"choice", difficulty:"hard", topic:"交易机制", question:"在期货集合竞价期间，以下哪种行为是允许的？", options:["撤销已提交的申报","提交新的买卖申报","确认前一日的结算价","进行大宗场外协商交易"], answer:1 }
+];
+
+// ==============================
+// 全局状态
+// ==============================
+const TOTAL = QUESTIONS.length;
+let currentIndex = 0;
+let answers = [];          // { questionId, selectedIndex, isCorrect }
+let shuffledQuestions = [];
+let isAnswerLocked = false;
+
+// ==============================
+// 工具函数
+// ==============================
+function $(id) { return document.getElementById(id); }
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ==============================
+// 开始测评
+// ==============================
+function startQuiz() {
+  shuffledQuestions = shuffle(QUESTIONS);
+  currentIndex = 0;
+  answers = [];
+  isAnswerLocked = false;
+
+  switchScreen('screen-quiz');
+  renderQuestion();
+}
+
+// ==============================
+// 切换屏幕
+// ==============================
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+  if (id === 'screen-start') {
+    $('nickname').value = '';
+  }
+}
+
+// ==============================
+// 渲染当前题目
+// ==============================
+function renderQuestion() {
+  if (currentIndex >= TOTAL) {
+    showResults();
+    return;
+  }
+
+  isAnswerLocked = false;
+  const q = shuffledQuestions[currentIndex];
+
+  // 进度条
+  const pct = (currentIndex / TOTAL) * 100;
+  $('progress-bar').style.width = pct + '%';
+  $('quiz-counter').textContent = `${currentIndex + 1} / ${TOTAL}`;
+
+  // 难度标签
+  const badge = $('difficulty-badge');
+  const diffMap = { easy: ['入门', 'diff-easy'], medium: ['进阶', 'diff-medium'], hard: ['挑战', 'diff-hard'] };
+  const [label, cls] = diffMap[q.difficulty];
+  badge.textContent = label;
+  badge.className = 'difficulty-badge ' + cls;
+
+  // 题目文本
+  $('question-text').textContent = q.question;
+
+  // 选项
+  const labels = ['A', 'B', 'C', 'D'];
+  const opts = $('options-list');
+  opts.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option-card';
+    div.innerHTML = `<span class="option-label">${labels[i]}</span><span>${opt}</span>`;
+    div.addEventListener('click', () => selectOption(i, div));
+    opts.appendChild(div);
+  });
+}
+
+// ==============================
+// 选择选项
+// ==============================
+function selectOption(selectedIndex, el) {
+  if (isAnswerLocked) return;
+  isAnswerLocked = true;
+
+  const q = shuffledQuestions[currentIndex];
+  const isCorrect = (selectedIndex === q.answer);
+
+  // 标记所有选项样式
+  const allOptions = document.querySelectorAll('.option-card');
+  allOptions.forEach((opt, i) => {
+    opt.style.pointerEvents = 'none';
+    if (i === q.answer) opt.classList.add('correct');
+    if (i === selectedIndex && !isCorrect) opt.classList.add('wrong');
+  });
+  el.classList.add('selected');
+
+  answers.push({ questionId: q.id, selectedIndex, isCorrect });
+
+  // 延迟进入下一题
+  const delay = isCorrect ? 500 : 900;
+  setTimeout(() => {
+    currentIndex++;
+    if (currentIndex < TOTAL) {
+      renderQuestion();
+    } else {
+      // 最后一题做完，进度条满
+      $('progress-bar').style.width = '100%';
+      setTimeout(showResults, 400);
+    }
+  }, delay);
+}
+
+// ==============================
+// 显示结果
+// ==============================
+function showResults() {
+  switchScreen('screen-result');
+
+  const totalCorrect = answers.filter(a => a.isCorrect).length;
+  const totalWrong = TOTAL - totalCorrect;
+  const score = totalCorrect * 4;  // 每题4分，满分100
+  const pct = Math.round((totalCorrect / TOTAL) * 100);
+
+  // 等级评定
+  let gradeIcon, gradeName, gradeComment, gradeSuggestion;
+  if (pct >= 90) {
+    gradeIcon = '🏆'; gradeName = '期货达人';
+    gradeComment = '你对期货知识了如指掌，属于市场中的知识型选手！';
+    gradeSuggestion = '💡 建议：可关注高阶策略与量化交易领域，持续拓展知识边界。';
+  } else if (pct >= 75) {
+    gradeIcon = '⭐'; gradeName = '进阶玩家';
+    gradeComment = '期货知识基础扎实，具备独立判断市场的能力。';
+    gradeSuggestion = '💡 建议：深入学习技术分析和基本面分析，提升交易决策质量。';
+  } else if (pct >= 60) {
+    gradeIcon = '👍'; gradeName = '入门选手';
+    gradeComment = '对期货有一定了解，但知识体系还需要完善。';
+    gradeSuggestion = '💡 建议：系统学习期货基础教材，特别是保证金制度和风控规则。';
+  } else {
+    gradeIcon = '📚'; gradeName = '知识萌新';
+    gradeComment = '期货世界博大精深，从现在开始探索也不晚！';
+    gradeSuggestion = '💡 建议：从期货入门书籍和模拟交易开始，先建立基本概念框架。';
+  }
+
+  $('grade-icon').textContent = gradeIcon;
+  $('grade-name').textContent = gradeName;
+  $('grade-comment').textContent = gradeComment;
+  $('grade-suggestion').textContent = gradeSuggestion;
+
+  // 环形图
+  const circumference = 2 * Math.PI * 68; // ~427.26
+  const offset = circumference - (pct / 100) * circumference;
+  setTimeout(() => {
+    $('ring-fg').style.strokeDashoffset = offset;
+  }, 200);
+
+  // 数字滚动
+  animateNumber($('ring-score'), pct, '%');
+  animateNumber($('stat-correct'), totalCorrect, '');
+  animateNumber($('stat-wrong'), totalWrong, '');
+  animateNumber($('stat-score'), score, '');
+
+  // 错题回顾
+  const wrongAnswers = answers.filter(a => !a.isCorrect);
+  const reviewSection = $('review-section');
+  const reviewList = $('review-list');
+  if (wrongAnswers.length > 0) {
+    reviewSection.style.display = 'block';
+    reviewList.innerHTML = wrongAnswers.map(a => {
+      const q = QUESTIONS.find(qq => qq.id === a.questionId);
+      const userAns = q.options[a.selectedIndex];
+      const correctAns = q.options[q.answer];
+      return `
+        <div class="review-item">
+          <div class="ri-q">❓ ${q.question}</div>
+          <div style="color:#f44336;margin-top:4px;">你的回答：${userAns}</div>
+          <div class="ri-a">正确答案：${correctAns}</div>
+        </div>`;
+    }).join('');
+  } else {
+    reviewSection.style.display = 'none';
+  }
+
+  // 撒花特效（≥90%）
+  if (pct >= 90) {
+    launchConfetti();
+  }
+}
+
+// ==============================
+// 数字滚动动画
+// ==============================
+function animateNumber(el, target, suffix) {
+  const duration = 1200;
+  const startTime = performance.now();
+  const startVal = 0;
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // easeOutExpo
+    const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+    const current = Math.round(startVal + (target - startVal) * eased);
+    el.textContent = current + suffix;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ==============================
+// 撒花特效
+// ==============================
+function launchConfetti() {
+  const canvas = $('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = [];
+  const colors = ['#c9a96e','#e8c97a','#ff6b6b','#4ecdc4','#45b7d1','#f9ca24','#ff9ff3','#54a0ff'];
+  for (let i = 0; i < 150; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 4,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 4 + 2,
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 10,
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    if (frame > 180) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.03;
+      p.rotation += p.rotSpeed;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rotation * Math.PI) / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    requestAnimationFrame(animate);
+  }
+  animate();
+  setTimeout(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); }, 5000);
+}
+
+// ==============================
+// 再来一次
+// ==============================
+function retryQuiz() {
+  switchScreen('screen-start');
+}
+</script>
+</body>
+</html>
